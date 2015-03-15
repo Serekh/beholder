@@ -1,6 +1,6 @@
 # Beholder
 
-Beholder is an agent written in [Python](https://www.python.org/) for [twemproxy](https://github.com/twitter/twemproxy) to work with a  [redis sentinel](http://redis.io/topics/sentinel) to provide support for failover
+Beholder is an agent written in [Python](https://www.python.org/) for [twemproxy](https://github.com/twitter/twemproxy) to work with a  [redis sentinel](http://redis.io/topics/sentinel) to provide support for failover.
 
 Beholder's purpose is to extend the HA capabilities of twemproxy even after a redis node has failed.
 
@@ -8,7 +8,7 @@ In order to accomplish this, beholder is continuously monitoring the **+switch-m
 
 ## Dependencies
 
-Beholder use [redis-py](https://github.com/andymccurdy/redis-py) and [pyyaml](http://pyyaml.org/), so the first step is install the dependencies
+Beholder use [redis-py](https://github.com/andymccurdy/redis-py) and [pyyaml](http://pyyaml.org/), so the first step is install the dependencies:
 
     $ pip install redis
 	$ pip install pyyaml
@@ -20,7 +20,7 @@ If you want to install python yaml system-wide in linux, you can also use a pack
 	
 ## Installation
 
-The follow installation steps are the default ones, feel free to change any path
+The follow installation steps are the default ones, feel free to change any path.
 
 	$ sudo cp src/beholder.py /usr/local/bin/beholder.py
 	$ sudo cp config/beholder.yml /etc/nutcracker/beholder.yml
@@ -32,7 +32,7 @@ The follow installation steps are the default ones, feel free to change any path
 
 ## Configuration
 
-Beholder can be configured through a YAML file [beholder.yml](config/beholder.yml)
+Beholder can be configured through a YAML file [beholder.yml](config/beholder.yml).
 
     beholder:
       log_file: "/var/log/beholder.log"
