@@ -1,0 +1,12 @@
+beholder:
+  log_file: "/var/log/beholder.log"
+  connect_retry_count: -1 # l-1 to unlimited
+  connect_retry_interval: 1000 # Milliseconds
+
+redis:
+  sentinel_ip: "127.0.0.1"
+  sentinel_port: 26379
+
+twemproxy:
+  config_file: "/etc/nutcracker/nutcracker.yml"
+  restart_command: "/etc/init.d/nutcracker restart"
