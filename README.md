@@ -1,4 +1,4 @@
-# beholder
+# Beholder
 
 Beholder is an agent written in [Python](https://www.python.org/) for [twemproxy](https://github.com/twitter/twemproxy) to work with a  [redis sentinel](http://redis.io/topics/sentinel) to provide support for failover
 
