@@ -1,6 +1,7 @@
 # beholder
 
 Beholder is an agent written in [Python](https://www.python.org/) for [twemproxy](https://github.com/twitter/twemproxy) to work with a  [redis sentinel](http://redis.io/topics/sentinel) to provide support for failover
+
 Beholder's purpose is to extend the HA capabilities of twemproxy even after a redis node has failed.
 
 In order to accomplish this, beholder is continuously monitoring the **+switch-master** event, then it will update twemproxy configuration files and restart the resource.
@@ -19,7 +20,7 @@ If you want to install python yaml system-wide in linux, you can also use a pack
 	
 ## Installation
 
-The follow installation steps are the default ones used in the script 
+The follow installation steps are the default ones, feel free to change any path
 
 	$ sudo cp src/beholder.py /usr/local/bin/beholder.py
 	$ sudo cp config/beholder.yml /etc/nutcracker/beholder.yml
