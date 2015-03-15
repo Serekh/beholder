@@ -36,7 +36,7 @@ Beholder can be configured through a YAML file [beholder.yml](config/beholder.ym
 
     beholder:
       log_file: "/var/log/beholder.log"
-      connect_retry_count: -1 # l-1 to unlimited
+      connect_retry_count: -1 # -1 to unlimited
       connect_retry_interval: 1000 # Milliseconds
 
     redis:
