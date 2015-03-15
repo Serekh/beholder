@@ -127,7 +127,7 @@ class Beholder(object):
             newIP = switchMasterInfo[3]
             newPort = switchMasterInfo[4]
             if(self._updateMasters(oldIP, oldPort, newIP, newPort)):
-                self._restartTwemProxy()
+                self._restartTwemproxy()
                 self._logger.info('Master changed successfully')
             else:
                 err = 'Master update error (%s:%s --> %s:%s)' % (oldIP, oldPort, newIP, newPort)
@@ -136,7 +136,7 @@ class Beholder(object):
             self._logger.warning('Wrong number of parameters: %s' % switchMasterInfo)
 
     def _updateMasters(self, oldServer, oldPort, newServer, newPort):
-        """ Updates the address of a server in the TwemProxy config """
+        """ Updates the address of a server in the twemproxy config """
         bUpdated = False
         
         try:
@@ -177,7 +177,7 @@ class Beholder(object):
                 
             return bUpdated
 
-    def _restartTwemProxy(self):
+    def _restartTwemproxy(self):
         """ Restart Twemproxy/Nutcracker service to reload the changes in configuration files """
         os.system(self._config.twemproxyRestartCommand)
 
