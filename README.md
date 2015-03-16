@@ -23,7 +23,7 @@ If you want to install python yaml system-wide in linux, you can also use a pack
 The follow installation steps are the default ones, feel free to change any path.
 
 	$ sudo cp src/beholder.py /usr/local/bin/beholder.py
-	$ sudo cp config/beholder.yml /etc/nutcracker/beholder.yml
+	$ sudo cp conf/beholder.yml /etc/nutcracker/beholder.yml
 	$ sudo cp scripts/beholder.init /etc/init.d/beholder
 	$ sudo chmod 775 /etc/init.d/beholder
 	$ sudo chkconfig --add /etc/init.d/beholder
