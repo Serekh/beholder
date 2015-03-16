@@ -100,7 +100,7 @@ class Beholder(object):
         """ Connect to Redis sentinel and subscribe to the channel '+switch-master' to listen master changes """
         bConnected = False
         retryCount = 0
-        while not self._stopEvent.is_set() or not bConnected:
+        while not self._stopEvent.is_set() and not bConnected:
             try:
                 self._redis = redis.StrictRedis(host=self._config.redisSentinelIP, port=self._config.redisSentinelPort)
                 self._pubsub = self._redis.pubsub()
