@@ -1,5 +1,12 @@
-import sys, os, time, signal, threading, logging
-import yaml, redis
+import sys
+import os
+import time
+import signal
+import threading
+import logging
+import yaml
+import redis
+
 
 class PidfileHelper(object):
     def __init__(self, pidfile):
@@ -7,17 +14,18 @@ class PidfileHelper(object):
         
     def exist(self):
         """ Check for a pidfile to see if the daemon already runs """
-        bExist = True
+        b_exist = True
         try:
-            with open(self._pidfile,'r') as pf:
+            with open(self._pidfile, 'r') as pf:
                 pid = int(pf.read().strip())
         except IOError:
-            bExist = False
+            b_exist = False
+        return b_exist
             
     def create(self):
         """ Create the pidfile """
         pid = str(os.getpid())
-        with open(self._pidfile,'w+') as f:
+        with open(self._pidfile, 'w+') as f:
             f.write(pid + '\n')
         return pid
         
@@ -25,25 +33,27 @@ class PidfileHelper(object):
         """ Remove the pidfile """
         os.remove(self._pidfile)
 
+
 class BeholderConfig(object):
-    def __init__(self, configFilename):
-        with open(configFilename) as f:
-            configData = yaml.safe_load(f)
-            self.beholderLogFile = configData['beholder']['log_file']
-            self.beholderConnectRetryCount = configData['beholder']['connect_retry_count']
-            self.beholderConnectRetryInterval = configData['beholder']['connect_retry_interval']
-            self.redisSentinelIP = configData['redis']['sentinel_ip']
-            self.redisSentinelPort = configData['redis']['sentinel_port']
-            self.twemproxyConfigFile = configData['twemproxy']['config_file']
-            self.twemproxyRestartCommand = configData['twemproxy']['restart_command']
-            
+    def __init__(self, config_filename):
+        with open(config_filename) as f:
+            config_data = yaml.safe_load(f)
+            self.beholder_log_file = config_data['beholder']['log_file']
+            self.beholder_connect_retry_count = config_data['beholder']['connect_retry_count']
+            self.beholder_connect_retry_interval = config_data['beholder']['connect_retry_interval']
+            self.redis_sentinel_ip = config_data['redis']['sentinel_ip']
+            self.redis_sentinel_port = config_data['redis']['sentinel_port']
+            self.twemproxy_config_file = config_data['twemproxy']['config_file']
+            self.twemproxy_restart_command = config_data['twemproxy']['restart_command']
+
+
 class BeholderLogger(object):
-    def __init__(self, name, logFilename):
+    def __init__(self, name, log_filename):
         # Create logger
         self._logger = logging.getLogger(name)
         self._logger.setLevel(logging.INFO)
         # Create file handler
-        handler = logging.FileHandler(logFilename)
+        handler = logging.FileHandler(log_filename)
         handler.setLevel(logging.INFO)
         # Create formatter
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -68,13 +78,14 @@ class BeholderLogger(object):
         
     def exception(self, msg):
         self._logger.exception(msg)
-        
+
+
 class Beholder(object):
-    def __init__(self, pid, configFilename):
-        self._config = BeholderConfig(configFilename)
-        self._logger = BeholderLogger(pid, self._config.beholderLogFile)
-        self._stopEvent = threading.Event()
-        signal.signal(signal.SIGTERM, self._signalTerminationHandler)
+    def __init__(self, pid, config_filename):
+        self._config = BeholderConfig(config_filename)
+        self._logger = BeholderLogger(pid, self._config.beholder_log_file)
+        self._stop_event = threading.Event()
+        signal.signal(signal.SIGTERM, self._signal_termination_handler)
         self._pubsub = None
         
     def __del__(self):
@@ -83,116 +94,116 @@ class Beholder(object):
         
     def execute(self):
         if self._connect():
-            while not self._stopEvent.is_set():
+            while not self._stop_event.is_set():
                 message = self._pubsub.get_message()
                 if message and message['type'] == 'message':
-                    switchMasterInfo = str(message['data']).split(' ')
-                    self._switchMaster(switchMasterInfo)
+                    switch_master_info = str(message['data']).split(' ')
+                    self._switch_master(switch_master_info)
                 time.sleep(0.001)
         self._logger.info('Beholder stopped')
         
-    def _signalTerminationHandler(self, signaum, frame):
+    def _signal_termination_handler(self, signaum, frame):
         """ Listen SIGTERM signal to stop the process in the right way """
         self._logger.info('Signal.SIGTERM received')
-        self._stopEvent.set()
+        self._stop_event.set()
         
     def _connect(self):
         """ Connect to Redis sentinel and subscribe to the channel '+switch-master' to listen master changes """
-        bConnected = False
-        retryCount = 0
-        while not self._stopEvent.is_set() and not bConnected:
+        b_connected = False
+        retry_count = 0
+        while not self._stop_event.is_set() and not b_connected:
             try:
-                self._redis = redis.StrictRedis(host=self._config.redisSentinelIP, port=self._config.redisSentinelPort)
+                self._redis = redis.StrictRedis(host=self._config.redis_sentinel_ip, port=self._config.redis_sentinel_port)
                 self._pubsub = self._redis.pubsub()
                 self._pubsub.subscribe(['+switch-master'])
-            except Exception as e:
-                self._logger.exception('Redis sentinel connection error: %s' % retryCount)
+            except:
+                self._logger.exception('Redis sentinel connection error: %s' % retry_count)
                 # Check if maximum retry count is arrived
-                if self._config.beholderConnectRetryCount > 0 and retryCount >= self._config.beholderConnectRetryCount:
-                    self._stopEvent.set()
+                if self._config.beholder_connect_retry_count > 0 and retry_count >= self._config.beholder_connect_retry_count:
+                    self._stop_event.set()
                     self._logger.critical('Max retries exceeded')
                 else:
-                    retryCount = retryCount + 1
-                    time.sleep(self._config.beholderConnectRetryInterval / 1000)
+                    retry_count += 1
+                    time.sleep(self._config.beholder_connect_retry_interval / 1000)
             else:
-                bConnected = True
+                b_connected = True
             
-        return bConnected
+        return b_connected
                 
-    def _switchMaster(self, switchMasterInfo):
+    def _switch_master(self, switch_master_info):
         """ Called when new message is publish in the sentinel channel (+switch-master) """
-        if len(switchMasterInfo)>3:
-            oldIP = switchMasterInfo[1]
-            oldPort = switchMasterInfo[2]
-            newIP = switchMasterInfo[3]
-            newPort = switchMasterInfo[4]
-            if(self._updateMasters(oldIP, oldPort, newIP, newPort)):
-                self._restartTwemproxy()
+        if len(switch_master_info) > 3:
+            old_ip = switch_master_info[1]
+            old_port = switch_master_info[2]
+            new_ip = switch_master_info[3]
+            new_port = switch_master_info[4]
+            if self._update_masters(old_ip, old_port, new_ip, new_port):
+                self._restart_twemproxy()
                 self._logger.info('Master changed successfully')
             else:
-                err = 'Master update error (%s:%s --> %s:%s)' % (oldIP, oldPort, newIP, newPort)
+                err = 'Master update error (%s:%s --> %s:%s)' % (old_ip, old_port, new_ip, new_port)
                 self._logger.error(err)
         else:
-            self._logger.warning('Wrong number of parameters: %s' % switchMasterInfo)
+            self._logger.warning('Wrong number of parameters: %s' % switch_master_info)
 
-    def _updateMasters(self, oldServer, oldPort, newServer, newPort):
+    def _update_masters(self, old_server, old_port, new_server, new_port):
         """ Updates the address of a server in the twemproxy config """
-        bUpdated = False
+        b_updated = False
         
         try:
-            with open(self._config.twemproxyConfigFile) as f:
-                proxyData = yaml.safe_load(f)
+            with open(self._config.twemproxy_config_file) as f:
+                proxy_data = yaml.safe_load(f)
         except:
             self._logger.exception('Could not open the twemproxy configuration file')
         else:
-            for proxy in proxyData:
-                for i, server in enumerate(proxyData[proxy]['servers']):
-                    serverData = server.split(' ')
-                    urlData = serverData[0].split(':')
+            for proxy in proxy_data:
+                for i, server in enumerate(proxy_data[proxy]['servers']):
+                    server_data = server.split(' ')
+                    url_data = server_data[0].split(':')
                     
-                    host = urlData[0]
-                    port = urlData[1]
-                    number = urlData[2]
-                    name=''
+                    host = url_data[0]
+                    port = url_data[1]
+                    number = url_data[2]
+                    name = ''
                     
                     try:
-                        name = serverData[1]
+                        name = server_data[1]
                     except:
                         pass
                         
                     # Check if the current server is the old master server
-                    if str(host) == str(oldServer) and str(port) == str(oldPort):
-                        host = newServer
-                        port = newPort
-                        proxyData[proxy]['servers'][i]= host + ':' + str(port) + ':' + str(number) + ' ' + name
-                        self._logger.info('%s -> %s:%s changed to %s:%s' % (name, oldServer, oldPort, host, port))
-                        bUpdated = True
+                    if str(host) == str(old_server) and str(port) == str(old_port):
+                        host = new_server
+                        port = new_port
+                        proxy_data[proxy]['servers'][i]= host + ':' + str(port) + ':' + str(number) + ' ' + name
+                        self._logger.info('%s -> %s:%s changed to %s:%s' % (name, old_server, old_port, host, port))
+                        b_updated = True
 
             try:
-                with open(self._config.twemproxyConfigFile, 'w') as f:
-                    yaml.dump(proxyData, f, default_flow_style=False)
+                with open(self._config.twemproxy_config_file, 'w') as f:
+                    yaml.dump(proxy_data, f, default_flow_style=False)
             except:
                 self._logger.warning('Could not updated the twemproxy configuration file')
-                bUpdated = False
+                b_updated = False
                 
-            return bUpdated
+            return b_updated
 
-    def _restartTwemproxy(self):
+    def _restart_twemproxy(self):
         """ Restart Twemproxy/Nutcracker service to reload the changes in configuration files """
-        os.system(self._config.twemproxyRestartCommand)
+        os.system(self._config.twemproxy_restart_command)
 
 if __name__ == "__main__":
     pidfile = sys.argv[1]  # '/var/run/beholder.pid'
     config = sys.argv[2]  # 'beholder.yml'
     
-    pidfileHelper = PidfileHelper(pidfile)
-    if not pidfileHelper.exist():
+    pidfile_helper = PidfileHelper(pidfile)
+    if not pidfile_helper.exist():
         try:
-            pid = pidfileHelper.create()
+            pid = pidfile_helper.create()
             beholder = Beholder(pid, config)
             beholder.execute()
         finally:
-            pidfileHelper.delete()
+            pidfile_helper.delete()
             sys.exit(0)
     else:
-        sys.exist(1)
+        sys.exit(1)
