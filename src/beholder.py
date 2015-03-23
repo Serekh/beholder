@@ -4,6 +4,7 @@ import time
 import signal
 import threading
 import logging
+import logging.handlers
 import yaml
 import redis
 
@@ -53,7 +54,7 @@ class BeholderLogger(object):
         self._logger = logging.getLogger(name)
         self._logger.setLevel(logging.INFO)
         # Create file handler
-        handler = logging.FileHandler(log_filename)
+        handler = logging.handlers.RotatingFileHandler(log_filename, maxBytes=524288, backupCount=3)
         handler.setLevel(logging.INFO)
         # Create formatter
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
