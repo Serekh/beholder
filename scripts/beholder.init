@@ -17,7 +17,7 @@ case "$1" in
                 echo "$PIDFILE exists, process is already running or crashed"
         else
                 echo "Starting Beholder..."
-                python $EXEC $PIDFILE $CONF &
+                python $EXEC $PIDFILE $CONF > /dev/null 2>&1 & 
         fi
         ;;
     stop)
